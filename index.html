@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 발명의날 You QUIZ?</title>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: #FFECB3;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .hide {
+            display: none !important;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #FFA000;
+            margin-bottom: 2rem;
+        }
+
+        input {
+            width: 80%;
+            padding: 15px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            background-color: #FFA000;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #FF8F00;
+        }
+
+        #running-score {
+            font-size: 1.2rem;
+            color: #FF6F00;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+
+        #question {
+            font-size: 1.6rem;
+            margin-bottom: 2rem;
+            line-height: 1.45;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .options-container button {
+            width: 100%;
+            background-color: #f9f9f9;
+            color: #333;
+            border: 1px solid #ccc;
+            line-height: 1.45;
+        }
+
+        .options-container button:hover:not(:disabled) {
+            background-color: #e0e0e0;
+            transform: scale(1.02);
+        }
+
+        .options-container button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #waiting-page h2 {
+            color: #007BFF;
+            margin-top: 1rem;
+            line-height: 1.6;
+            font-size: 1.4rem;
+        }
+
+        .small-text {
+            color: #777;
+            font-size: 0.95rem;
+            margin-top: 1rem;
+        }
+
+        .notice-box {
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 16px;
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.2rem;
+                border-radius: 12px;
+            }
+
+            h1 {
+                font-size: 1.65rem;
+                margin-bottom: 1.2rem;
+            }
+
+            #question {
+                font-size: 1.12rem;
+                line-height: 1.5;
+                margin-bottom: 1.2rem;
+                word-break: keep-all;
+            }
+
+            .options-container button {
+                font-size: 0.96rem;
+                padding: 12px;
+                line-height: 1.45;
+                white-space: normal;
+                word-break: keep-all;
+            }
+
+            #running-score {
+                font-size: 0.95rem;
+            }
+
+            input {
+                width: 100%;
+                font-size: 0.95rem;
+                padding: 12px;
+                box-sizing: border-box;
+            }
+
+            button {
+                width: 100%;
+                font-size: 1rem;
+                padding: 12px;
+            }
+
+            #waiting-page h2 {
+                font-size: 1.08rem;
+            }
+
+            .small-text {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div id="login-page">
+            <h1>2026 발명의날 You QUIZ?</h1>
+            <input type="text" id="username-input" placeholder="이름(영문 ID)를 입력하세요">
+            <br>
+            <button onclick="startQuiz()">입장하기</button>
+            <p class="small-text">동일 ID로 다시 입장하면 이어서 참여할 수 있습니다.</p>
+        </div>
+
+        <div id="waiting-page" class="hide">
+            <h1>유레카뱅!</h1>
+            <h2 id="waiting-message">
+                진행자가 다음 문제를 준비 중입니다.<br>
+                잠시만 대기해주세요!
+            </h2>
+            <div class="notice-box">
+                퀴즈 중에는 화면을 닫지 말고 기다려주세요.<br>
+                끊겼다면 같은 ID로 다시 입장하면 됩니다.
+            </div>
+        </div>
+
+        <div id="quiz-page" class="hide">
+            <p id="running-score"></p>
+            <h2 id="question"></h2>
+            <div id="options" class="options-container"></div>
+        </div>
+
+        <div id="final-page" class="hide">
+            <h1>수고하셨습니다!</h1>
+            <p>
+                <strong id="current-user-name"></strong>님의 최종 점수는
+                <strong id="current-user-score"></strong>점 입니다.
+            </p>
+        </div>
+
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSxzXmvpB8qm96YZGPXGVBRPZ67T8VytQ",
+            authDomain: "bnquiz-21b55.firebaseapp.com",
+            projectId: "bnquiz-21b55",
+            storageBucket: "bnquiz-21b55.firebasestorage.app",
+            messagingSenderId: "1032641945995",
+            appId: "1:1032641945995:web:c2c3f5f3de2499f8e50f8e"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const quizData = [
+            {
+                question: "전년도 기술분야 특허 출원 중 <strong>가장 출원비중이 높았던 분야</strong>는?",
+                options: ["빅데이터 분석", "LLM. 생성모델 활용", "안면 인증"],
+                answer: "LLM. 생성모델 활용"
+            },
+            {
+                question: "<strong>제59회 발명의날</strong> 카카오뱅크가 수상한 표창은?",
+                options: ["대통령 표창", "은행연합회 표창", "특허청장 표창"],
+                answer: "대통령 표창"
+            },
+            {
+                question: "다음 중 직원이 한 발명이 ‘직무발명’으로 인정받기 위한 <strong>필수 조건이 아닌 것은?</strong>",
+                options: [
+                    "발명이 회사의 업무 범위에 속해야 한다.",
+                    "발명 과정에서 회사의 컴퓨터를 꼭 사용해야 한다.",
+                    "발명을 하게 된 행위가 직원의 현재 또는 과거의 직무에 속해야 한다."
+                ],
+                answer: "발명 과정에서 회사의 컴퓨터를 꼭 사용해야 한다."
+            },
+            {
+                question: "카카오뱅크 구성원이 업무와 관련된 새로운 기술을 발명하여 국내에서 특허 ‘출원’ 및 ‘등록'을 마쳤습니다.<br><br>이 경우, 해당 구성원이 받게 되는 <strong>직무발명보상금은 총 얼마일까요?</strong>",
+                options: [
+                    "출원 시 100만원, 등록 시 100만원을 지급받아 총 200만원을 받게 된다.",
+                    "특허 출원 시에만 10만원을 지급 받는다.",
+                    "연말정산 시 세액 공제 혜택만 받는다."
+                ],
+                answer: "출원 시 100만원, 등록 시 100만원을 지급받아 총 200만원을 받게 된다."
+            },
+            {
+                question: "현재 대한민국을 포함한 미국, 유럽 등 주요국 특허청의 공식적인 입장에 따르면, <strong>인공지능(AI)을 특허의 '발명자'로 인정하고 있을까요?</strong>",
+                options: [
+                    "AI의 기술적 기여를 인정하여 단독 발명자로 인정한다.",
+                    "자연인(사람)만이 발명자가 될 수 있으므로 인정하지 않는다.",
+                    "AI를 개발한 사람이나 회사를 발명자로 등록하도록 하고 있다."
+                ],
+                answer: "자연인(사람)만이 발명자가 될 수 있으므로 인정하지 않는다."
+            },
+            {
+                question: "아직 ‘공개’되지 않은 나의 핵심 발명 아이디어를, ChatGPT나 Gemini 같은 범용 생성형 AI에 그대로 입력했습니다.<br><br><strong>‘특허법’ 측면에서, 이 행동이 가져올 수 있는 가장 치명적인 문제는 무엇일까요?</strong>",
+                options: [
+                    "AI 모델이 아이디어를 멋대로 수정할 수 있다.",
+                    "해당 아이디어에 대한 권리를 AI 개발사와 공동으로 소유해야만 한다.",
+                    "입력된 아이디어가 공개된 것으로 간주되어 특허 등록이 어려워질 수 있다."
+                ],
+                answer: "입력된 아이디어가 공개된 것으로 간주되어 특허 등록이 어려워질 수 있다."
+            },
+            {
+                question: "스탠퍼드 대학의 AI Index 2026 보고서에 따르면, 2024년 전 세계 <strong>‘인구 대비’ AI 특허 등록 건수 순위</strong>에서, 대한민국은 어떤 위치를 차지했을까요?",
+                options: [
+                    "미국, 중국에 이어 3위를 기록하며 AI 기술 강국의 위상을 확고히 했다.",
+                    "압도적인 기술 혁신 밀도를 보여주며, 2년 연속 세계 1위를 차지했다.",
+                    "10위권에 머무르며, AI 특허 경쟁력 강화를 위한 노력이 필요한 것으로 나타났다."
+                ],
+                answer: "압도적인 기술 혁신 밀도를 보여주며, 2년 연속 세계 1위를 차지했다."
+            }
+        ];
+
+        const TOTAL_QUESTIONS = quizData.length;
+
+        let currentQuestion = 0;
+        let score = 0;
+        let username = "";
+        let answeredQuestions = {};
+        let unsubscribeAdmin = null;
+        let isSubmitting = false;
+
+        const pages = {
+            login: document.getElementById('login-page'),
+            waiting: document.getElementById('waiting-page'),
+            quiz: document.getElementById('quiz-page'),
+            final: document.getElementById('final-page')
+        };
+
+        const usernameInput = document.getElementById("username-input");
+
+        window.addEventListener("load", () => {
+            const savedUsername = localStorage.getItem("quiz_username");
+            if (savedUsername) {
+                usernameInput.value = savedUsername;
+            }
+        });
+
+        window.addEventListener("online", () => {
+            if (username) {
+                checkCurrentAdminState();
+                restoreParticipantData(username);
+            }
+        });
+
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden && username) {
+                checkCurrentAdminState();
+                restoreParticipantData(username);
+            }
+        });
+
+        window.addEventListener("focus", () => {
+            if (username) {
+                checkCurrentAdminState();
+                restoreParticipantData(username);
+            }
+        });
+
+        function showPage(pageName) {
+            Object.values(pages).forEach(p => p.classList.add('hide'));
+            pages[pageName].classList.remove('hide');
+        }
+
+        function saveLocalState() {
+            localStorage.setItem("quiz_username", username);
+            localStorage.setItem("quiz_score", String(score));
+            localStorage.setItem("quiz_answeredQuestions", JSON.stringify(answeredQuestions));
+        }
+
+        function loadLocalState() {
+            const savedUsername = localStorage.getItem("quiz_username");
+            const savedScore = localStorage.getItem("quiz_score");
+            const savedAnswered = localStorage.getItem("quiz_answeredQuestions");
+
+            if (savedUsername) username = savedUsername;
+            if (savedScore) score = Number(savedScore) || 0;
+
+            try {
+                answeredQuestions = savedAnswered ? JSON.parse(savedAnswered) : {};
+            } catch (e) {
+                answeredQuestions = {};
+            }
+        }
+
+        async function startQuiz() {
+            username = usernameInput.value.trim();
+
+            if (!username) {
+                alert("이름(영문 ID)를 입력해주세요!");
+                return;
+            }
+
+            localStorage.setItem("quiz_username", username);
+
+            await restoreParticipantData(username);
+
+            await db.collection("participants").doc(username).set({
+                username: username,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            setWaitingBeforeStart();
+
+            showPage('waiting');
+
+            listenAdminState();
+            checkCurrentAdminState();
+        }
+
+        async function restoreParticipantData(userId) {
+            const doc = await db.collection("participants").doc(userId).get();
+
+            if (doc.exists) {
+                const data = doc.data();
+
+                score = data.score || 0;
+                answeredQuestions = {};
+
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    if (data[`Q${i}`] === "O" || data[`Q${i}`] === "X") {
+                        answeredQuestions[i - 1] = true;
+                    }
+                }
+            } else {
+                score = 0;
+                answeredQuestions = {};
+            }
+
+            saveLocalState();
+        }
+
+        function listenAdminState() {
+            if (unsubscribeAdmin) return;
+
+            unsubscribeAdmin = db.collection("admin").doc("control").onSnapshot((doc) => {
+                if (!doc.exists) return;
+                if (!username) return;
+
+                const data = doc.data();
+                applyAdminState(data);
+            }, (error) => {
+                console.error("관리자 상태 감지 오류:", error);
+            });
+        }
+
+        async function checkCurrentAdminState() {
+            if (!username) return;
+
+            const doc = await db.collection("admin").doc("control").get();
+
+            if (!doc.exists) return;
+
+            const data = doc.data();
+            applyAdminState(data);
+        }
+
+        function applyAdminState(data) {
+            if (!username) return;
+
+            const state = data.state;
+            const index = data.currentQuestionIndex || 0;
+
+            if (state === "login") {
+                setWaitingBeforeStart();
+                showPage("waiting");
+                return;
+            }
+
+            if (state === "question") {
+                currentQuestion = index;
+
+                if (answeredQuestions[currentQuestion]) {
+                    setWaitingAfterSubmit(currentQuestion);
+                    showPage("waiting");
+                } else {
+                    loadQuiz();
+                    showPage("quiz");
+                }
+
+                return;
+            }
+
+            if (state === "finished") {
+                document.getElementById("current-user-name").textContent = username;
+                document.getElementById("current-user-score").textContent = score;
+                showPage("final");
+            }
+        }
+
+        function setWaitingBeforeStart() {
+            document.getElementById("waiting-message").innerHTML =
+                "입장 완료!<br>진행자가 퀴즈를 시작할 때까지 기다려주세요.";
+        }
+
+        function setWaitingAfterSubmit(questionIndex) {
+            const submittedNumber = questionIndex + 1;
+            const nextNumber = submittedNumber + 1;
+
+            if (nextNumber <= TOTAL_QUESTIONS) {
+                document.getElementById("waiting-message").innerHTML =
+                    `퀴즈 ${submittedNumber}번 답안 제출 완료!<br>${nextNumber}번 문제 대기중`;
+            } else {
+                document.getElementById("waiting-message").innerHTML =
+                    `퀴즈 ${submittedNumber}번 답안 제출 완료!<br>최종 결과 발표 대기중`;
+            }
+        }
+
+        function loadQuiz() {
+            const currentQuizData = quizData[currentQuestion];
+
+            if (!currentQuizData) {
+                alert("문제 데이터를 찾을 수 없습니다.");
+                return;
+            }
+
+            document.getElementById("running-score").textContent =
+                `${username}님, 현재 점수는 ${score}점 입니다.`;
+
+            document.getElementById("question").innerHTML =
+                `${currentQuestion + 1}. ${currentQuizData.question}`;
+
+            const optionsEl = document.getElementById("options");
+            optionsEl.innerHTML = "";
+
+            currentQuizData.options.forEach(option => {
+                const button = document.createElement("button");
+                button.innerText = option;
+                button.onclick = () => selectAnswer(option, button);
+                optionsEl.appendChild(button);
+            });
+        }
+
+        async function selectAnswer(selectedOption, clickedButton) {
+            if (isSubmitting) return;
+            if (answeredQuestions[currentQuestion]) return;
+
+            isSubmitting = true;
+            answeredQuestions[currentQuestion] = true;
+
+            const buttons = document.getElementById("options").querySelectorAll("button");
+            buttons.forEach(btn => btn.disabled = true);
+
+            clickedButton.style.backgroundColor = "#FFA000";
+            clickedButton.style.color = "white";
+
+            const isCorrect = selectedOption === quizData[currentQuestion].answer;
+
+            if (isCorrect) {
+                score++;
+            }
+
+            saveLocalState();
+
+            try {
+                await db.collection("participants").doc(username).set({
+                    username: username,
+                    [`Q${currentQuestion + 1}`]: isCorrect ? "O" : "X",
+                    score: score,
+                    lastAnsweredQuestion: currentQuestion + 1,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                saveLocalState();
+
+                setTimeout(() => {
+                    setWaitingAfterSubmit(currentQuestion);
+                    showPage("waiting");
+                    isSubmitting = false;
+                }, 500);
+
+            } catch (error) {
+                console.error(error);
+                alert("답안 제출 중 연결 문제가 발생했습니다. 같은 ID로 다시 입장하면 이어서 참여할 수 있습니다.");
+                isSubmitting = false;
+            }
+        }
+
+        loadLocalState();
+    </script>
+</body>
+</html>
